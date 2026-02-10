@@ -1,0 +1,34 @@
+---
+- name: Validation HTTP du service
+  hosts: local
+  gather_facts: false
+
+  vars:
+    service_url: "http://localhost:8080"
+
+  tasks:
+    - name: Vérifier que le service HTTP répond
+      uri:
+        url: "{{ service_url }}"
+        status_code: 200
+
+    - name: Récupérer les informations du container
+      command: docker inspect nginx-platform
+      register: container_inspect
+      changed_when: false
+
+    - name: Vérifier que le container est running
+      assert:
+        that:
+          - "'Running' in container_inspect.stdout"
+
+    - name: Vérifier l’exposition du port
+      assert:
+        that:
+          - "'8080' in container_inspect.stdout"
+
+    - name: Vérifier la restart policy
+      assert:
+        that:
+          - "'always' in container_inspect.stdout"
+
